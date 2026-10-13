@@ -4,14 +4,39 @@
 
 ## Índice
 
-- [Estructura del repositorio](#estructura-del-repositorio)
-- [Problemática que resuelve](#problemática-que-resuelve)
-- [Lo que se obtiene al aplicar el patrón](#lo-que-se-obtiene-al-aplicar-el-patrón)
-- [Estructura del patrón en el ejemplo](#estructura-del-patrón-en-el-ejemplo)
-- [Ventajas y desventajas en el ejemplo](#ventajas-y-desventajas-en-el-ejemplo)
-- [Stack tecnológico del ejemplo](#stack-tecnológico-del-ejemplo)
-- [Cómo ejecutar el repositorio](#cómo-ejecutar-el-repositorio)
-- [Aplicación en OpticaSync Pro](#aplicación-en-opticasync-pro)
+- [Patrón Composite](#patrón-composite)
+  - [Índice](#índice)
+  - [Estructura del repositorio](#estructura-del-repositorio)
+  - [¿Qué es Composite y de dónde viene?](#qué-es-composite-y-de-dónde-viene)
+    - [Origen](#origen)
+    - [Idea central](#idea-central)
+    - [Cuándo usarlo](#cuándo-usarlo)
+    - [Variantes y relación con otros patrones](#variantes-y-relación-con-otros-patrones)
+  - [Consigna del ejercicio y diagrama](#consigna-del-ejercicio-y-diagrama)
+    - [Enunciado](#enunciado)
+    - [Diagrama de clases](#diagrama-de-clases)
+    - [Qué se pide](#qué-se-pide)
+    - [Árbol que debe armar el `Main`](#árbol-que-debe-armar-el-main)
+    - [Resultados esperados](#resultados-esperados)
+    - [Preguntas de reflexión](#preguntas-de-reflexión)
+  - [Problemática que resuelve](#problemática-que-resuelve)
+  - [Lo que se obtiene al aplicar el patrón](#lo-que-se-obtiene-al-aplicar-el-patrón)
+    - [Beneficios obtenidos](#beneficios-obtenidos)
+  - [Estructura del patrón en el ejemplo](#estructura-del-patrón-en-el-ejemplo)
+  - [Ventajas y desventajas en el ejemplo](#ventajas-y-desventajas-en-el-ejemplo)
+    - [Ventajas](#ventajas)
+    - [Desventajas](#desventajas)
+  - [Stack tecnológico del ejemplo](#stack-tecnológico-del-ejemplo)
+  - [Cómo ejecutar el repositorio](#cómo-ejecutar-el-repositorio)
+  - [Aplicación en OpticaSync Pro](#aplicación-en-opticasync-pro)
+    - [1. Problema en OpticaSync](#1-problema-en-opticasync)
+    - [2. Código ANTES](#2-código-antes)
+    - [3. Diagrama de clases ANTES](#3-diagrama-de-clases-antes)
+    - [4. Solución aplicada](#4-solución-aplicada)
+    - [5. Código DESPUÉS](#5-código-después)
+    - [6. Diagrama de clases DESPUÉS](#6-diagrama-de-clases-después)
+    - [7. Resultado](#7-resultado)
+    - [8. Pruebas](#8-pruebas)
 
 ## Estructura del repositorio
 
@@ -19,12 +44,128 @@
 patron-composite/
 ├── README.md
 └── src/
+    ├── antes/                    ← código SIN el patrón (instanceof y List<Object>)
+    │   ├── Materia.java
+    │   ├── Agrupacion.java
+    │   └── Main.java
     └── despues/                  ← código con el patrón aplicado
         ├── ComponenteAcademico.java   (Component)
         ├── Materia.java               (Leaf)
         ├── Agrupacion.java            (Composite)
         └── Main.java                  (Client)
 ```
+
+## ¿Qué es Composite y de dónde viene?
+
+**Composite** es un patrón de diseño **estructural**. Sirve para **componer objetos en estructuras de árbol** que representan jerarquías *parte-todo* (un todo formado por partes, y esas partes pueden ser a su vez otros todos), y permite que el código cliente **trate igual a un objeto individual y a un grupo de objetos**.
+
+### Origen
+
+- Fue catalogado por la llamada **"Banda de los Cuatro" (Gang of Four, GoF)**: Erich Gamma, Richard Helm, Ralph Johnson y John Vlissides, en el libro *Design Patterns: Elements of Reusable Object-Oriented Software* (1994).
+- El libro lo clasifica entre los patrones **estructurales**, los que se ocupan de cómo se combinan clases y objetos para formar estructuras más grandes.
+- Su ejemplo motivador son los **editores gráficos**: hay figuras simples (línea, texto) y grupos de figuras, y un grupo puede contener otros grupos. El editor quiere mover o dibujar cualquier cosa de la misma forma, sea una figura o un grupo.
+- También se le conoce como **Object Tree** (árbol de objetos).
+
+### Idea central
+
+Se define una **interfaz común** (aquí, una clase abstracta) para los elementos simples y para los grupos. El grupo guarda una lista de elementos de ese tipo común y, cuando le piden algo, **se lo pide a cada hijo**. Como un hijo puede ser otro grupo, la operación se vuelve **recursiva** y funciona a cualquier profundidad.
+
+### Cuándo usarlo
+
+- Cuando los datos tienen forma de **árbol** (partes dentro de todos, que a su vez son partes de otros todos).
+- Cuando quieres que el cliente **no tenga que distinguir** entre un elemento simple y un grupo.
+
+Ejemplos típicos: sistema de archivos (carpetas y archivos), menús con submenús, organigramas, interfaces gráficas (paneles con componentes), planes de estudio (semestres y materias).
+
+### Variantes y relación con otros patrones
+
+| Tema | Detalle |
+|---|---|
+| **Variante transparente** | `agregar()` y `eliminar()` están en el componente común. El cliente trata todo igual, pero las hojas tienen que rechazar esos métodos. |
+| **Variante segura** | `agregar()` y `eliminar()` solo están en el compuesto. Las hojas no tienen métodos inútiles, pero el cliente debe saber cuál objeto es un grupo para agregarle hijos. Es la que usa este repositorio. |
+| **Iterator** | Sirve para recorrer el árbol que arma Composite. |
+| **Visitor** | Permite agregar operaciones nuevas sobre todo el árbol sin modificar sus clases. |
+| **Decorator** | Tiene una estructura recursiva parecida, pero su propósito es añadir comportamiento a un objeto, no agrupar objetos. |
+
+Los roles del patrón (Component, Leaf, Composite y Client) y cómo se aplican en este ejemplo están en [Estructura del patrón en el ejemplo](#estructura-del-patrón-en-el-ejemplo).
+
+## Consigna del ejercicio y diagrama
+
+### Enunciado
+
+**Plan de estudios.** Una universidad organiza su carrera en **materias** y **agrupaciones**. Una materia es un elemento simple con un nombre y una cantidad de créditos. Una agrupación (un semestre, un grupo de electivas, el plan completo) reúne materias y también puede contener otras agrupaciones.
+
+Se necesita calcular los créditos de cualquier parte del plan y mostrar el plan completo como un árbol con sangría, **sin que el cliente tenga que saber si está frente a una materia o a una agrupación**.
+
+### Diagrama de clases
+
+```mermaid
+classDiagram
+    direction TB
+    class ComponenteAcademico {
+        <<abstract>>
+        -nombre: String
+        +getCreditos() int
+        +mostrar(nivel: int) void
+    }
+    class Materia {
+        -creditos: int
+        +getCreditos() int
+        +mostrar(nivel: int) void
+    }
+    class Agrupacion {
+        -hijos: List~ComponenteAcademico~
+        +agregar(c: ComponenteAcademico) void
+        +eliminar(c: ComponenteAcademico) void
+        +getCreditos() int
+        +mostrar(nivel: int) void
+    }
+    ComponenteAcademico <|-- Materia
+    ComponenteAcademico <|-- Agrupacion
+    Agrupacion o-- ComponenteAcademico : contiene
+```
+
+### Qué se pide
+
+Implementar el diagrama en Java (11 o superior) aplicando el patrón **Composite**:
+
+1. `ComponenteAcademico` (clase abstracta) con el atributo `nombre` y los métodos abstractos `getCreditos()` y `mostrar(nivel)`.
+2. `Materia` (hoja): `getCreditos()` devuelve sus créditos y `mostrar(nivel)` imprime una línea con sangría.
+3. `Agrupacion` (compuesto): guarda `List<ComponenteAcademico>`, con `agregar(c)` y `eliminar(c)`. Su `getCreditos()` **suma los créditos de sus hijos** y su `mostrar(nivel)` imprime su línea y luego la de cada hijo con un nivel más de sangría.
+4. Una clase `Main` que arme el árbol de abajo y use todo **sin `instanceof`**.
+
+> El diagrama deja `nombre` como privado, pero `Materia` y `Agrupacion` lo necesitan para imprimirse. Hay que declararlo `protected` o agregar un getter. En `src/despues` se usó `protected` más `getNombre()`.
+
+### Árbol que debe armar el `Main`
+
+```
+Plan Ingeniería de Sistemas
+├── Semestre 1
+│   ├── Cálculo Diferencial (4)
+│   ├── Programación I (3)
+│   └── Introducción a la Ingeniería (2)
+└── Semestre 2
+    ├── Cálculo Integral (4)
+    ├── Programación II (3)
+    └── Electivas
+        ├── Ética (2)
+        └── Inglés I (2)
+```
+
+### Resultados esperados
+
+| Elemento | Créditos |
+|---|---|
+| Semestre 1 | 4 + 3 + 2 = **9** |
+| Electivas | 2 + 2 = **4** |
+| Semestre 2 | 4 + 3 + 4 = **11** |
+| Plan completo | 9 + 11 = **20** |
+
+### Preguntas de reflexión
+
+1. ¿Por qué `agregar()` y `eliminar()` están solo en `Agrupacion` y no en `ComponenteAcademico`? ¿Qué se gana y qué se pierde?
+2. ¿Qué pasa si una agrupación se agrega a sí misma? ¿Cómo lo evitarías?
+3. Si se pide un tipo nuevo, `Laboratorio` (créditos pero sin nota), ¿qué clases hay que modificar?
 
 ## Problemática que resuelve
 
